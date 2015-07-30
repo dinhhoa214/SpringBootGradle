@@ -6,14 +6,23 @@ import org.gradle.entity.User;
  
 
 public interface UserService {
-	
-	User save(User user);
-	
-	List<User> getUser();
-	
-	User getUserByEmail(String email);
+	/*
+	 * @
+	 */
+	User getUserById(String id);
+	User insertUser(User user); 
+	void updateUser(User user);
+	User getUserByEmailHiddenPass(String email);
+	/*
+	 * 
+	 *
+	 */
+	List<User> getUsers(); 
+	/*
+	 * 
+	 * 
+	 */
+	void deleteUser(String idUser);
 
-	List<User> deleteUser(String email);
-
-	User updateUser(User user);
+	
 }

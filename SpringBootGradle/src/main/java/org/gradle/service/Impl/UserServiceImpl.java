@@ -7,7 +7,9 @@ import org.gradle.responsitory.UserRepository;
 import org.gradle.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired; 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; 
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils; 
 
 @Service
 @Transactional
@@ -16,45 +18,67 @@ public class UserServiceImpl implements UserService{
 	@Autowired
 	private UserRepository userRepository;
 	
-	public User save(User user){
-		User us = getUserByEmail(user.getEmail());
-		if (us == null){
+	
+	 
+
+	public User insertUser(User user){ 
+		boolean check = checkUserByEmail(user.getEmail());
+		if(check){
+		    throw new RuntimeException("Email is exist");
+		}
+		updateUser(user);
+		return user;
+	}
+	
+	@Override
+	public void updateUser(User user) {
 		userRepository.save(user);
-		user.setPassword("");
-		return user;
-		}
-		return null;
+		if(!StringUtils.isEmpty(user.getPassword()))
+			user.setPassword("");
 	}
-	
-	public List<User> getUser(){
-		
-		List<User> list = userRepository.findAll();
-		list.forEach(us -> us.setPassword(""));
+
+	public List<User> getUsers(){ 
+		List<User> list = userRepository.findAll(); 
+		if(!CollectionUtils.isEmpty(list)){
+			   list.forEach(us -> us.setPassword(""));
+			}
 		return list;
+	} 
+
+	public User getUserByEmail(String email) {
+		User user =  userRepository.findByEmail(email); 
+		return user;
 	}
 	
-	public User getUserByEmail(String email){
-		User user =  userRepository.findByEmail(email);
-		if (user == null) return null;
-		user.setPassword("");
+	@Override
+	public User getUserByEmailHiddenPass(String email) {
+		User user = getUserByEmail(email);
+		if(user == null){
+			   throw new IllegalArgumentException("could not user empty !");
+		}
+		if(!StringUtils.isEmpty(user.getPassword()))
+			user.setPassword("");
+		return user;
+	}
+
+	private boolean checkUserByEmail(String email){
+		User user = getUserByEmail(email);
+		if(user == null)
+			return false;
+		return true;
+	}
+	
+	public User getUserById(String id){
+		User user = userRepository.findOne(id);
+		if(user == null){
+		    throw new IllegalArgumentException("could not user empty !");
+		} 
 		return user;
 	}
 
 	@Override
-	public List<User> deleteUser(String email) {
-		if (getUserByEmail(email) != null){
-			userRepository.delete(userRepository.findByEmail(email));
-		}
-		return getUser();
-	}
-
-	@Override
-	public User updateUser(User user) {
-		if (getUserByEmail(user.getEmail()) == null)
-		return null;
-		else{
-			userRepository.delete(userRepository.findByEmail(user.getEmail()));
-			return save(user);
-		}
-	}
+	public void deleteUser(String idUser) {
+		User userDelete = getUserById(idUser);
+		userRepository.delete(userDelete);
+	} 
 }
